@@ -1,6 +1,8 @@
 package main
 
-//go:generate go run github.com/cilium/ebpf/cmd/bpf2go -target bpfel -cc clang gen_execve ./bpf/execve.bpf.c -- -I/usr/include/bpf -I.
+// go:generate go run github.com/cilium/ebpf/cmd/bpf2go -target bpfel -cc clang gen_execve ./bpf/execve.bpf.c -- -I/usr/include/bpf -I.
+
+//go:generate go run github.com/cilium/ebpf/cmd/bpf2go -target bpfel -cc clang gen_tcpconnlat ./bpf/tcpconnlat.bpf.c -- -I/usr/include/bpf -I.
 
 import (
 	"bytes"
