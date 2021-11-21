@@ -14,16 +14,12 @@ gen: gen_execve_bpfel.go
 clean:
 	-rm $(APP)
 	-rm gen*
-	-rm bpf/vmlinux.h
-	-rm go.sum
-	sed 's/v.*/latest/g' -i go.mod
 
 $(APP): main.go gen_execve_bpfel.go
 	CGO_ENABLED=0 go build -o $(APP)
 
 gen_execve_bpfel.go:
-	go generate *.go
-	@rm *.o
+	go generate
 
 go.sum:
 	go mod download github.com/cilium/ebpf
