@@ -1,35 +1,30 @@
-APP="exec_scrape"
-REG="192.168.2.51:5000"
+APP=exec_scrape
 
 .PHONY: build
-build: vmlinux
-	docker build -t $(APP) .
-	-docker rm -f dummy
-	docker create -it --name dummy $(APP) /bin/sh
-	docker cp dummy:$(APP) $(APP)
-	docker rm -f dummy
-	docker save $(APP) | gzip -9 > $(APP).tar.gz
+build: gen $(APP)
 
-.PHONY: push
-push: build
-	docker tag $(APP) $(REG)/$(APP)
-	docker push $(REG)/$(APP)
-	docker image remove $(REG)/$(APP)
+.PHONY: run
+run: build
+	sudo ./$(APP)
 
-.PHONY: rund
-rund: build
-	docker run -it --privileged -v /sys/kernel/debug:/sys/kernel/debug $(APP)
-
-.PHONY: container
-container: build
-	docker run -it --privileged -v /sys/kernel/debug:/sys/kernel/debug $(APP) /bin/sh
-
-.PHONY: vmlinux
-vmlinux:
-	cd app && make clean && make vmlinux
+.PHONY: gen
+gen: gen_execve_bpfel.go
 
 .PHONY: clean
 clean:
-	-docker system prune -a
-	-rm -f $(APP)
-	cd app && make clean
+	-rm $(APP)
+	-rm gen*
+	-rm bpf/vmlinux.h
+	-rm go.sum
+	sed 's/v.*/latest/g' -i go.mod
+
+$(APP): main.go gen_execve_bpfel.go
+	CGO_ENABLED=0 go build -o $(APP)
+
+gen_execve_bpfel.go:
+	go generate *.go
+	@rm *.o
+
+go.sum:
+	go mod download github.com/cilium/ebpf
+	go get github.com/cilium/ebpf/internal/unix
